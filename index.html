@@ -584,7 +584,7 @@
                 console.error("Element with ID 'generate-quote' not found");
             }
 
-            fetch(`https://www.googleapis.com/webfonts/v1/webfonts?key=AIzaSyAhyTmgVuOlcPZTGbfR-Vg5nVrORDbB-yI`)
+            fetch(`https://www.googleapis.com/webfonts/v1/webfonts?key=[YourGoogleAPIKey]`)
                 .then(response => response.json())
                 .then(data => {
                     const fonts = data.items;
