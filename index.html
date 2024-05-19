@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quote Image Generator</title>
+    <!-- Add jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Add jQuery UI -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <!-- CKEditor -->
+    <script src="https://cdn.ckeditor.com/4.16.0/standard-all/ckeditor.js"></script>
+    <!-- PapaParse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        #quote-output {
+            width: 500px;
+            height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            color: white;
+            font-family: 'Roboto', sans-serif;
+            position: relative;
+        }
+
+        #quote-output p {
+            margin: 0;
+        }
+
+        #author-output {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.75em;
+        }
+
+        #icon-output {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+        }
+
+        #quote-output.animated {
+            animation-duration: 2s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .dark-bg {
+            background-color: #333;
+        }
+
+        .dark-text {
+            color: #fff;
+        }
+
+        .dark-border {
+            border-color: #555;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 p-6">
+    <div class="flex justify-between space-x-4">
+        <div class="w-1/2 bg-gray-800 p-4 rounded-lg shadow-md">
+            <h2 class="text-2xl font-bold mb-4">Quote Image Generator</h2>
+
+            <!-- Enter Quote -->
+            <div class="mb-4">
+                <label for="quote-text" class="block text-sm font-medium text-gray-300">Enter Quote</label>
+                <textarea id="quote-text" rows="3" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+            </div>
+
+            <!-- Autofill Buttons -->
+            <div class="mb-4 flex justify-between">
+                <button id="autofill-dark-btn" class="bg-gray-700 text-white py-2 px-4 rounded-md hover:bg-gray-900">Dark CS</button>
+                <button id="autofill-light-btn" class="bg-gray-700 text-white py-2 px-4 rounded-md hover:bg-gray-900">Light CS</button>
+                <button id="autofill-quote-btn" class="bg-gray-700 text-white py-2 px-4 rounded-md hover:bg-gray-900">Auto Fill Quote</button>
+                <button id="import-settings" class="bg-gray-700 text-white py-2 px-4 rounded-md hover:bg-gray-900">Import Settings</button>
+                <button id="export-settings" class="bg-gray-700 text-white py-2 px-4 rounded-md hover:bg-gray-900">Export Settings</button>
+            </div>
+
+            <!-- Color Inputs -->
+            <div class="mb-4 flex flex-wrap justify-between">
+                <div class="w-1/4 pr-2">
+                    <label for="font-select" class="block text-sm font-medium text-gray-300">Font Selection</label>
+                    <select id="font-select" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Tahoma">Tahoma</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                    </select>
+                </div>
+                <div class="w-1/4 pr-2">
+                    <label for="author" class="block text-sm font-medium text-gray-300">Author</label>
+                    <input type="text" id="author" placeholder="Author Name" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="w-1/4 pr-2">
+                    <label for="font-icon" class="block text-sm font-medium text-gray-300">Font Icon</label>
+                    <input type="text" id="font-icon" placeholder="Font Icon" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="w-1/4">
+                    <label for="background-image" class="block text-sm font-medium text-gray-300">Background Image</label>
+                    <input type="text" id="background-image" placeholder="Image URL" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+            </div>
+
+            <!-- Icon Size and Text Alignment -->
+            <div class="mb-4 flex flex-wrap justify-between">
+                <div class="w-1/2 pr-2">
+                    <label for="icon-size" class="block text-sm font-medium text-gray-300">Icon Size</label>
+                    <input type="range" id="icon-size" min="24" max="48" value="24" class="mt-1 block w-full">
+                    <span id="icon-size-value" class="block text-sm text-right text-gray-300"></span>
+                </div>
+                <div class="w-1/2">
+                    <label for="align-text" class="block text-sm font-medium text-gray-300">Align Quote Text</label>
+                    <select id="align-text" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Color Inputs -->
+            <div class="mb-4 flex flex-wrap justify-between">
+                <div class="w-1/4 pr-2">
+                    <label for="background-color" class="block text-sm font-medium text-gray-300">Background Color</label>
+                    <input type="color" id="background-color" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <input type="text" id="background-color-hex" class="mt-1 block w-full py-1 px-1 bg-gray-900 text-gray-300 rounded-md shadow-sm" readonly>
+                </div>
+                <div class="w-1/4 pr-2">
+                    <label for="font-color" class="block text-sm font-medium text-gray-300">Font Color</label>
+                    <input type="color" id="font-color" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <input type="text" id="font-color-hex" class="mt-1 block w-full py-1 px-1 bg-gray-900 text-gray-300 rounded-md shadow-sm" readonly>
+                </div>
+                <div class="w-1/4 pr-2">
+                    <label for="icon-color" class="block text-sm font-medium text-gray-300">Icon Color</label>
+                    <input type="color" id="icon-color" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <input type="text" id="icon-color-hex" class="mt-1 block w-full py-1 px-1 bg-gray-900 text-gray-300 rounded-md shadow-sm" readonly>
+                </div>
+                <div class="w-1/4">
+                    <label for="border-color" class="block text-sm font-medium text-gray-300">Border Color</label>
+                    <input type="color" id="border-color" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <input type="text" id="border-color-hex" class="mt-1 block w-full py-1 px-1 bg-gray-900 text-gray-300 rounded-md shadow-sm" readonly>
+                </div>
+            </div>
+
+            <!-- Border and Gradient Inputs -->
+            <div class="mb-4 flex flex-wrap justify-between">
+                <div class="w-1/4 pr-2">
+                    <label for="border-style" class="block text-sm font-medium text-gray-300">Border Style</label>
+                    <select id="border-style" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="solid">Solid</option>
+                        <option value="dashed">Dashed</option>
+                        <option value="dotted">Dotted</option>
+                    </select>
+                </div>
+                <div class="w-1/4 pr-2">
+                    <label for="border-thickness" class="block text-sm font-medium text-gray-300">Border Thickness</label>
+                    <input type="number" id="border-thickness" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" min="1" max="20" value="2">
+                </div>
+                <div class="w-1/4 pr-2">
+                    <label for="gradient-color1" class="block text-sm font-medium text-gray-300">Gradient Color 1</label>
+                    <input type="color" id="gradient-color1" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <input type="text" id="gradient-color1-hex" class="mt-1 block w-full py-1 px-1 bg-gray-900 text-gray-300 rounded-md shadow-sm" readonly>
+                </div>
+                <div class="w-1/4">
+                    <label for="gradient-color2" class="block text-sm font-medium text-gray-300">Gradient Color 2</label>
+                    <input type="color" id="gradient-color2" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <input type="text" id="gradient-color2-hex" class="mt-1 block w-full py-1 px-1 bg-gray-900 text-gray-300 rounded-md shadow-sm" readonly>
+                </div>
+            </div>
+
+            <div class="mb-4 flex flex-wrap justify-between">
+                <div class="w-1/2 pr-2">
+                    <label for="gradient-direction" class="block text-sm font-medium text-gray-300">Gradient Direction</label>
+                    <select id="gradient-direction" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="to right">To Right</option>
+                        <option value="to left">To Left</option>
+                        <option value="to bottom">To Bottom</option>
+                        <option value="to top">To Top</option>
+                    </select>
+                </div>
+                <div class="w-1/2">
+                    <label for="animation-select" class="block text-sm font-medium text-gray-300">Text Animation</label>
+                    <select id="animation-select" class="mt-1 block w-full py-1 px-1 border border-gray-700 bg-gray-900 text-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="none">None</option>
+                        <option value="fadeIn">Fade In</option>
+                        <option value="slideIn">Slide In</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="generate-quote" class="w-full mt-4 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700">Generate Quote</button>
+        </div>
+
+        <div class="w-1/2">
+            <div id="quote-output" class="hidden">
+                <div id="icon-output"></div>
+                <p id="quote-text-output"></p>
+                <p id="author-output"></p>
+            </div>
+            <button id="export-png" class="w-full mt-4 bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-700 hidden">Export as PNG</button>
+            <button id="export-jpg" class="w-full mt-4 bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-700 hidden">Export as JPG</button>
+        </div>
+    </div>
+
+    <script src="js/html2canvas.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            CKEDITOR.replace('quote-text', {
+                skin: 'moono-dark',
+                on: {
+                    change: function () {
+                        generateQuote();
+                    }
+                }
+            });
+
+            const defaultQuote = "The quick brown fox jumps over the lazy dog";
+            const defaultAuthor = "John Doe";
+            const defaultIcon = "<i class='fas fa-quote-left'></i>";
+            const fontSelect = document.getElementById('font-select');
+            const fallbackFonts = ['Arial', 'Verdana', 'Tahoma', 'Georgia', 'Times New Roman', 'Courier New'];
+
+            function getElementValue(id, defaultValue) {
+                const element = document.getElementById(id);
+                if (element) {
+                    return element.value || defaultValue;
+                } else {
+                    console.error(`Element with ID ${id} not found`);
+                    return defaultValue;
+                }
+            }
+
+            function updateHexColorInput(id) {
+                const colorInput = document.getElementById(id);
+                const hexInput = document.getElementById(`${id}-hex`);
+                if (colorInput && hexInput) {
+                    hexInput.value = colorInput.value;
+                }
+            }
+
+            function generateQuote() {
+                try {
+                    const font = getElementValue('font-select', 'Roboto');
+                    const backgroundColor = getElementValue('background-color', '#000000');
+                    const fontColor = getElementValue('font-color', '#ffffff');
+                    const fontSize = getElementValue('icon-size', '24');
+                    const iconSize = getElementValue('icon-size', '24');
+                    const iconColor = getElementValue('icon-color', '#ffffff');
+                    const borderColor = getElementValue('border-color', '#ffffff');
+                    const borderStyle = getElementValue('border-style', 'solid');
+                    const borderThickness = getElementValue('border-thickness', '2');
+                    const gradientColor1 = getElementValue('gradient-color1', '#000000');
+                    const gradientColor2 = getElementValue('gradient-color2', '#ffffff');
+                    const gradientDirection = getElementValue('gradient-direction', 'to right');
+                    const backgroundImage = getElementValue('background-image', '');
+                    const fontIcon = getElementValue('font-icon', defaultIcon);
+                    const text = CKEDITOR.instances['quote-text'].getData() || defaultQuote;
+                    const author = getElementValue('author', defaultAuthor);
+                    const alignText = getElementValue('align-text', 'center');
+
+                    const outputDiv = document.getElementById('quote-output');
+                    outputDiv.classList.remove('hidden');
+                    outputDiv.style.backgroundColor = backgroundColor;
+                    outputDiv.style.color = fontColor;
+                    outputDiv.style.fontFamily = font;
+                    outputDiv.style.textAlign = alignText;
+                    outputDiv.style.borderColor = borderColor;
+                    outputDiv.style.borderStyle = borderStyle;
+                    outputDiv.style.borderWidth = `${borderThickness}px`;
+                    outputDiv.style.backgroundImage = `linear-gradient(${gradientDirection}, ${gradientColor1}, ${gradientColor2})`;
+
+                    if (backgroundImage) {
+                        outputDiv.style.backgroundImage = `url(${backgroundImage}), linear-gradient(${gradientDirection}, ${gradientColor1}, ${gradientColor2})`;
+                        outputDiv.style.backgroundSize = 'cover';
+                    } else {
+                        outputDiv.style.backgroundImage = `linear-gradient(${gradientDirection}, ${gradientColor1}, ${gradientColor2})`;
+                    }
+
+                    const iconOutput = document.getElementById('icon-output');
+                    iconOutput.style.fontSize = `${iconSize}px`;
+                    iconOutput.style.color = iconColor;
+                    iconOutput.innerHTML = fontIcon;
+
+                    const quoteTextOutput = document.getElementById('quote-text-output');
+                    quoteTextOutput.style.fontSize = `${fontSize}px`;
+                    quoteTextOutput.innerHTML = text;
+
+                    const authorOutput = document.getElementById('author-output');
+                    authorOutput.innerHTML = `- ${author}`;
+
+                    outputDiv.style.boxShadow = `0px 0px 10px ${iconColor}`;
+
+                    const fontLink = document.createElement('link');
+                    fontLink.rel = 'stylesheet';
+                    fontLink.href = `https://fonts.googleapis.com/css2?family=${font.replace(' ', '+')}&display=swap`;
+                    document.head.appendChild(fontLink);
+
+                    document.getElementById('export-jpg').classList.remove('hidden');
+                    document.getElementById('export-png').classList.remove('hidden');
+                } catch (error) {
+                    console.error('Error generating quote:', error);
+                }
+            }
+
+            function exportImage(format) {
+                const outputDiv = document.getElementById('quote-output');
+                html2canvas(outputDiv).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `quote.${format}`;
+                    link.href = canvas.toDataURL(`image/${format}`);
+                    link.click();
+                }).catch(error => {
+                    console.error('Error exporting image:', error);
+                });
+            }
+
+            function autofillFields(theme) {
+                const darkCS = "source/DarkCS.csv";
+                const lightCS = "source/LightCS.csv";
+                const file = theme === 'dark' ? darkCS : lightCS;
+
+                Papa.parse(file, {
+                    download: true,
+                    header: false,
+                    complete: function (results) {
+                        const colors = results.data[0];
+                        if (theme === 'dark') {
+                            document.getElementById('background-color').value = `#${colors[0]}`;
+                            document.getElementById('border-color').value = `#${colors[1]}`;
+                            document.getElementById('gradient-color1').value = `#${colors[2]}`;
+                            document.getElementById('gradient-color2').value = `#${colors[3]}`;
+                            document.getElementById('font-color').value = '#ffffff';
+                            document.getElementById('icon-color').value = '#ffffff';
+                        } else {
+                            document.getElementById('background-color').value = `#${colors[0]}`;
+                            document.getElementById('border-color').value = `#${colors[1]}`;
+                            document.getElementById('gradient-color1').value = `#${colors[2]}`;
+                            document.getElementById('gradient-color2').value = `#${colors[3]}`;
+                            document.getElementById('font-color').value = '#000000';
+                            document.getElementById('icon-color').value = '#000000';
+                        }
+
+                        colorInputs.forEach(id => updateHexColorInput(id));
+                        generateQuote();
+                    }
+                });
+            }
+
+            function autofillQuote() {
+                Papa.parse("source/Quotes.csv", {
+                    download: true,
+                    header: true,
+                    complete: function (results) {
+                        const quotes = results.data;
+                        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                        CKEDITOR.instances['quote-text'].setData(randomQuote.Quote);
+                        document.getElementById('author').value = randomQuote.Author;
+                        document.getElementById('font-icon').value = randomQuote.Icon;
+
+                        generateQuote();
+                    }
+                });
+            }
+
+            function importSettings() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = event => {
+                        const settings = JSON.parse(event.target.result);
+                        Object.keys(settings).forEach(key => {
+                            const element = document.getElementById(key);
+                            if (element) {
+                                element.value = settings[key];
+                            }
+                        });
+                        generateQuote();
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            }
+
+            function exportSettings() {
+                const settings = {};
+                document.querySelectorAll('input, select').forEach(element => {
+                    settings[element.id] = element.value;
+                });
+                const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'settings.json';
+                link.click();
+            }
+
+            const colorInputs = ['background-color', 'font-color', 'icon-color', 'border-color', 'gradient-color1', 'gradient-color2'];
+            colorInputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', function () {
+                        updateHexColorInput(id);
+                        generateQuote();
+                    });
+                } else {
+                    console.error(`Element with ID ${id} not found`);
+                }
+            });
+
+            const rangeInputs = ['icon-size'];
+            rangeInputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', function () {
+                        const valueElement = document.getElementById(`${id}-value`);
+                        if (valueElement) {
+                            valueElement.textContent = this.value;
+                        }
+                        generateQuote();
+                    });
+                } else {
+                    console.error(`Element with ID ${id} not found`);
+                }
+            });
+
+            const authorInput = document.getElementById('author');
+            if (authorInput) {
+                authorInput.addEventListener('input', generateQuote);
+            } else {
+                console.error("Element with ID 'author' not found");
+            }
+
+            const backgroundImageInput = document.getElementById('background-image');
+            if (backgroundImageInput) {
+                backgroundImageInput.addEventListener('input', generateQuote);
+            } else {
+                console.error("Element with ID 'background-image' not found");
+            }
+
+            const alignTextInput = document.getElementById('align-text');
+            if (alignTextInput) {
+                alignTextInput.addEventListener('change', generateQuote);
+            } else {
+                console.error("Element with ID 'align-text' not found");
+            }
+
+            const fontIconInput = document.getElementById('font-icon');
+            if (fontIconInput) {
+                fontIconInput.addEventListener('input', generateQuote);
+            } else {
+                console.error("Element with ID 'font-icon' not found");
+            }
+
+            const borderStyleInput = document.getElementById('border-style');
+            if (borderStyleInput) {
+                borderStyleInput.addEventListener('change', generateQuote);
+            } else {
+                console.error("Element with ID 'border-style' not found");
+            }
+
+            const gradientDirectionInput = document.getElementById('gradient-direction');
+            if (gradientDirectionInput) {
+                gradientDirectionInput.addEventListener('change', generateQuote);
+            } else {
+                console.error("Element with ID 'gradient-direction' not found");
+            }
+
+            const autofillDarkBtn = document.getElementById('autofill-dark-btn');
+            if (autofillDarkBtn) {
+                autofillDarkBtn.addEventListener('click', function () {
+                    autofillFields('dark');
+                });
+            } else {
+                console.error("Element with ID 'autofill-dark-btn' not found");
+            }
+
+            const autofillLightBtn = document.getElementById('autofill-light-btn');
+            if (autofillLightBtn) {
+                autofillLightBtn.addEventListener('click', function () {
+                    autofillFields('light');
+                });
+            } else {
+                console.error("Element with ID 'autofill-light-btn' not found");
+            }
+
+            const autofillQuoteBtn = document.getElementById('autofill-quote-btn');
+            if (autofillQuoteBtn) {
+                autofillQuoteBtn.addEventListener('click', function () {
+                    autofillQuote();
+                });
+            } else {
+                console.error("Element with ID 'autofill-quote-btn' not found");
+            }
+
+            const exportJpgBtn = document.getElementById('export-jpg');
+            if (exportJpgBtn) {
+                exportJpgBtn.addEventListener('click', function () {
+                    exportImage('jpg');
+                });
+            } else {
+                console.error("Element with ID 'export-jpg' not found");
+            }
+
+            const exportPngBtn = document.getElementById('export-png');
+            if (exportPngBtn) {
+                exportPngBtn.addEventListener('click', function () {
+                    exportImage('png');
+                });
+            } else {
+                console.error("Element with ID 'export-png' not found");
+            }
+
+            const importSettingsBtn = document.getElementById('import-settings');
+            if (importSettingsBtn) {
+                importSettingsBtn.addEventListener('click', function () {
+                    importSettings();
+                });
+            } else {
+                console.error("Element with ID 'import-settings' not found");
+            }
+
+            const exportSettingsBtn = document.getElementById('export-settings');
+            if (exportSettingsBtn) {
+                exportSettingsBtn.addEventListener('click', function () {
+                    exportSettings();
+                });
+            } else {
+                console.error("Element with ID 'export-settings' not found");
+            }
+
+            const generateQuoteBtn = document.getElementById('generate-quote');
+            if (generateQuoteBtn) {
+                generateQuoteBtn.addEventListener('click', function () {
+                    generateQuote();
+                    document.getElementById('export-jpg').classList.remove('hidden');
+                    document.getElementById('export-png').classList.remove('hidden');
+                });
+            } else {
+                console.error("Element with ID 'generate-quote' not found");
+            }
+
+            fetch(`https://www.googleapis.com/webfonts/v1/webfonts?key=AIzaSyAhyTmgVuOlcPZTGbfR-Vg5nVrORDbB-yI`)
+                .then(response => response.json())
+                .then(data => {
+                    const fonts = data.items;
+                    fonts.forEach(font => {
+                        const option = document.createElement('option');
+                        option.value = font.family;
+                        option.textContent = font.family;
+                        fontSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching Google Fonts:', error);
+                    fallbackFonts.forEach(font => {
+                        const option = document.createElement('option');
+                        option.value = font;
+                        option.textContent = font;
+                        fontSelect.appendChild(option);
+                    });
+                });
+
+            // Generate initial preview
+            generateQuote();
+        });
+    </script>
+</body>
+
+</html>
